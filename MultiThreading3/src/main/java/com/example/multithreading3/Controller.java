@@ -7,6 +7,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 
 public class Controller {
+    @FXML
+    public void initialize() {
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+    }
 
     @FXML
     private ProgressBar progress;
@@ -14,51 +19,51 @@ public class Controller {
     private Button pauseButton;
     @FXML
     private Button startButton;
-
-
-    private progressBarThread barThread;
+    @FXML
+    private Button stopButton;
     private boolean running = false;
+    Model model;
     @FXML
     protected void startClicked()
     {
-        if(!running){
-            barThread = new progressBarThread();
-            barThread.setUpdater(new Updatable() {
-                public void update(double value) {
-                    Platform.runLater(new Runnable() {
-                        public void run() {
-                            progress.setProgress(value);
-                        }
-                    });
-                }
-            });
-            barThread.start();
-            running = true;
+        if (!running) {
             startButton.setText("Перезапуск");
+            model = new Model(progress);
+            running = true;
+            pauseButton.setDisable(false);
+            stopButton.setDisable(false);
         }
+
         else
-            barThread.setRerun(true);
+            model.barThread.setRerun(true);
     }
     @FXML
     protected void stopClicked()
     {
-        barThread.interrupt();
+        model.barThread.interrupt();
         progress.setProgress(0);
         running = false;
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
     }
     @FXML
     protected void pauseClicked()
     {
-        if (barThread.getIsPaused()) {
-            barThread.setIsPaused(false);
+        if (model.barThread.getIsPaused()) {
+            model.barThread.setIsPaused(false);
             pauseButton.setText("Пауза");
             synchronized (System.out) {
                 System.out.notify();
             }
+            stopButton.setDisable(false);
+            startButton.setDisable(false);
+
         }
         else {
-            barThread.setIsPaused(true);
+            model.barThread.setIsPaused(true);
             pauseButton.setText("Продолжить");
+            startButton.setDisable(true);
+            stopButton.setDisable(true);
         }
     }
 }
